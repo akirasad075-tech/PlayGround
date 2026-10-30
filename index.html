@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="Didnapper 2: Moonlight Rescue — a tiny touch-first stealth rescue game. Free your friends, dodge the lantern light, and slip back to the gate.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Moonlight Rescue">
+  <title>Didnapper 2 — Moonlight Rescue</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-state="title">
+  <div id="app">
+    <canvas id="game" aria-label="Moonlight Rescue game world"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <svg class="svg-sprite" aria-hidden="true">
+      <symbol id="ico-play" viewBox="0 0 24 24"><path d="M8 5.4v13.2a1 1 0 0 0 1.53.85l10.1-6.6a1 1 0 0 0 0-1.7L9.53 4.55A1 1 0 0 0 8 5.4Z"/></symbol>
+      <symbol id="ico-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.3"/><rect x="13.5" y="5" width="4" height="14" rx="1.3"/></symbol>
+      <symbol id="ico-sound" viewBox="0 0 24 24"><path d="M4 9.5v5h3.6l4.7 3.8c.6.5 1.5.1 1.5-.7V6.4c0-.8-.9-1.2-1.5-.7L7.6 9.5H4Z"/><path d="M17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+      <symbol id="ico-mute" viewBox="0 0 24 24"><path d="M4 9.5v5h3.6l4.7 3.8c.6.5 1.5.1 1.5-.7V6.4c0-.8-.9-1.2-1.5-.7L7.6 9.5H4Z"/><path d="m16.5 9.5 4 5m0-5-4 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+      <symbol id="ico-heart" viewBox="0 0 24 24"><path d="M12 20.2c-.4 0-.8-.15-1.1-.42C7.2 16.6 3 12.9 3 8.9 3 6.2 5.1 4 7.75 4c1.7 0 3.2.9 4.25 2.35C13.05 4.9 14.55 4 16.25 4 18.9 4 21 6.2 21 8.9c0 4-4.2 7.7-7.9 10.88-.3.27-.7.42-1.1.42Z"/></symbol>
+      <symbol id="ico-unlock" viewBox="0 0 24 24"><path d="M7 10V7.4A4.4 4.4 0 0 1 11.4 3 4.5 4.5 0 0 1 15.8 6h-2.2a2.3 2.3 0 0 0-2.2-1 2.2 2.2 0 0 0-2.2 2.4V10H18a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm5.95 3.2a1.9 1.9 0 0 0-.95 3.55V19h2v-2.25a1.9 1.9 0 0 0-.95-3.55h-.1Z"/></symbol>
+      <symbol id="ico-exit" viewBox="0 0 24 24"><path d="M4 4h8v2H6v12h6v2H4V4Zm11.3 3.3 1.4-1.4L22 11.2l-5.3 5.3-1.4-1.4 2.9-2.9H9v-2h9.2l-2.9-2.9Z"/></symbol>
+      <symbol id="ico-close" viewBox="0 0 24 24"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5Z"/></symbol>
+      <symbol id="ico-tilt" viewBox="0 0 24 24"><rect x="7" y="2.8" width="10" height="18.4" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 18.7h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m9.2 9.4 1.3-1.3 1.5 1.5 1.5-1.5 1.3 1.3-2.8 2.8-2.8-2.8Z"/></symbol>
+      <symbol id="ico-restart" viewBox="0 0 24 24"><path d="M5.1 8.3A8 8 0 1 1 4 13h2a6 6 0 1 0 .85-4.15L9.5 11H3V4.5l2.1 2.1Z"/></symbol>
+      <symbol id="ico-home" viewBox="0 0 24 24"><path d="m12 3 9 8h-2.6v9h-4.8v-6H10.4v6H5.6v-9H3l9-8Z"/></symbol>
+      <symbol id="ico-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.2a1.55 1.55 0 1 1 0 3.1 1.55 1.55 0 0 1 0-3.1Zm1.6 12.1h-3.2v-1.5h.7v-4.4h-.7v-1.5h2.5v5.9h.7v1.5Z"/></symbol>
+      <symbol id="ico-eye" viewBox="0 0 24 24"><path d="M12 5C6.5 5 2.7 9 1.5 12c1.2 3 5 7 10.5 7s9.3-4 10.5-7C21.3 9 17.5 5 12 5Zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4Zm0-6.4a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4Z"/></symbol>
+      <symbol id="ico-leaf" viewBox="0 0 24 24"><path d="M20.3 3.7C13 3.1 5.6 5.8 3.5 11.2c-1.2 3 .1 6.3 2.8 7.5 2.8 1.2 6.1-.2 7.6-2.9 1.9-3.4 1.2-6.4 6.4-12.1Z"/><path d="M5.4 20c1.9-4.8 5.2-8.1 9.7-10.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    </svg>
+
+    <header class="hud" id="hud">
+      <div class="hud-bar">
+        <div class="level-card">
+          <span class="level-num" id="hudLevelNum">01</span>
+          <span class="level-meta">
+            <strong id="hudLevelName">Garden Gate</strong>
+            <small id="hudObjective">Free Poppy</small>
+          </span>
+        </div>
+
+        <div class="hud-center">
+          <div class="friend-track" id="friendTrack" aria-label="Friends freed"></div>
+          <div class="stealth-pill" id="stealthPill"><span class="stealth-dot"></span><span id="stealthText">QUIET</span></div>
+        </div>
+
+        <div class="hud-actions">
+          <button class="icon-btn" id="soundBtn" type="button" aria-label="Mute sound" title="Sound">
+            <svg><use id="soundIconUse" href="#ico-sound"></use></svg>
+          </button>
+          <button class="icon-btn" id="pauseBtn" type="button" aria-label="Pause game" title="Pause">
+            <svg><use href="#ico-pause"></use></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="sting" id="sting" aria-hidden="true"></div>
+
+    <div class="joy-hint" id="joyHint" aria-hidden="true">
+      <span class="joy-hint-ring"><i></i></span>
+      <b>DRAG TO MOVE</b>
+    </div>
+
+    <div class="joystick" id="joystick" aria-hidden="true">
+      <div class="joy-base"></div>
+      <div class="joy-ticks"><i></i><i></i><i></i><i></i></div>
+      <div class="joy-thumb" id="joyThumb"></div>
+    </div>
+
+    <div class="tilt-chip" id="tiltChip" aria-hidden="true">
+      <svg><use href="#ico-tilt"></use></svg><span>TILT</span>
+    </div>
+
+    <button class="action-btn" id="actionBtn" type="button" aria-label="Free friend">
+      <span class="action-glow" aria-hidden="true"></span>
+      <svg id="actionIcon"><use href="#ico-unlock"></use></svg>
+      <span id="actionLabel">FREE</span>
+      <em id="actionSub">Poppy</em>
+    </button>
+
+    <div class="level-intro" id="levelIntro" aria-live="polite">
+      <div class="intro-card">
+        <span class="intro-kicker" id="introKicker">LEVEL 01</span>
+        <h2 id="introName">Garden Gate</h2>
+        <p id="introObjective">Free Poppy from the garden cage.</p>
+        <span class="intro-tap">TAP TO BEGIN</span>
+      </div>
+    </div>
+
+    <div class="caught-overlay" id="caughtOverlay" aria-hidden="true">
+      <div class="caught-card">
+        <span class="caught-word">SPOTTED</span>
+        <span class="caught-sub">Rewinding the night…</span>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <section class="screen title-screen is-active" id="titleScreen">
+      <div class="title-wrap">
+        <div class="eyebrow"><span></span>DID GAMES PRESENTS<span></span></div>
+        <h1 class="logo" aria-label="Didnapper 2">
+          <span class="logo-word">DIDNAPPER</span><span class="logo-two">2</span>
+        </h1>
+        <div class="logo-rule"><i></i><span>MOONLIGHT RESCUE</span><i></i></div>
+        <p class="tagline">The garden is quiet. The cages are not.<br>Sneak in, free every friend, slip away unseen.</p>
+
+        <div class="title-actions">
+          <button class="btn btn-primary btn-play" id="playBtn" type="button">
+            <svg><use href="#ico-play"></use></svg>
+            <span>Start the rescue</span>
+          </button>
+          <div class="title-secondary">
+            <button class="btn btn-ghost" id="howBtn" type="button">
+              <svg><use href="#ico-info"></use></svg><span>How to play</span>
+            </button>
+            <button class="btn btn-ghost tilt-toggle" id="titleTiltBtn" type="button" aria-pressed="false">
+              <svg><use href="#ico-tilt"></use></svg><span id="titleTiltLabel">Tilt controls</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="title-foot">
+          <span id="bestLine">No escapes logged yet</span>
+          <span class="foot-dot"></span>
+          <span>Touch · Tilt · Keyboard</span>
+        </div>
+      </div>
+      <p class="title-credit">A tiny, non-commercial fan-made mini game inspired by Didnapper 2.</p>
+    </section>
+
+    <!-- How to play -->
+    <section class="screen sheet-screen" id="howScreen" aria-labelledby="howTitle">
+      <div class="panel how-panel">
+        <button class="close-btn" id="howCloseBtn" type="button" aria-label="Close how to play">
+          <svg><use href="#ico-close"></use></svg>
+        </button>
+        <p class="kicker">Field notes</p>
+        <h2 id="howTitle">Quiet feet. Open cages.</h2>
+        <div class="how-grid">
+          <article class="how-card">
+            <span class="how-icon joy-icon"><i></i></span>
+            <h3>Move</h3>
+            <p>Drag anywhere on the left side of the screen. On desktop, use <b>WASD</b> or the arrow keys.</p>
+          </article>
+          <article class="how-card">
+            <span class="how-icon"><svg><use href="#ico-unlock"></use></svg></span>
+            <h3>Free</h3>
+            <p>Get close to a cage. Tap the big <b>FREE</b> button — or press <b>E</b> / <b>Space</b>.</p>
+          </article>
+          <article class="how-card">
+            <span class="how-icon"><svg><use href="#ico-leaf"></use></svg></span>
+            <h3>Hide</h3>
+            <p>Lantern light spots you. Duck into a leafy bush to vanish, then move when the guard turns.</p>
+          </article>
+          <article class="how-card">
+            <span class="how-icon"><svg><use href="#ico-exit"></use></svg></span>
+            <h3>Escape</h3>
+            <p>Free everyone, then return to the glowing gate. Getting caught only rewinds the level.</p>
+          </article>
+        </div>
+        <div class="how-note">
+          <svg><use href="#ico-tilt"></use></svg>
+          <p>Prefer steering by motion? Turn on <b>Tilt controls</b>. iPhone and iPad will ask for motion access. You can switch back anytime.</p>
+        </div>
+        <button class="btn btn-primary" id="howPlayBtn" type="button">I’m ready</button>
+      </div>
+    </section>
+
+    <!-- Pause -->
+    <section class="screen sheet-screen" id="pauseScreen" aria-labelledby="pauseTitle">
+      <div class="panel pause-panel">
+        <p class="kicker">Paused</p>
+        <h2 id="pauseTitle">Take a breath.</h2>
+        <p class="pause-line" id="pauseLine">The lanterns will wait.</p>
+
+        <div class="pause-settings">
+          <button class="setting-row" id="pauseSoundBtn" type="button">
+            <span class="setting-icon"><svg><use href="#ico-sound"></use></svg></span>
+            <span class="setting-copy"><b>Sound</b><small id="pauseSoundSub">Crickets &amp; chimes</small></span>
+            <span class="switch"><i></i></span>
+          </button>
+          <button class="setting-row" id="pauseTiltBtn" type="button">
+            <span class="setting-icon"><svg><use href="#ico-tilt"></use></svg></span>
+            <span class="setting-copy"><b>Tilt controls</b><small id="pauseTiltSub">Optional motion steering</small></span>
+            <span class="switch"><i></i></span>
+          </button>
+          <button class="recenter-row" id="recenterBtn" type="button">
+            <span>Recenter tilt</span><span>Hold your phone naturally, then tap</span>
+          </button>
+        </div>
+
+        <div class="pause-actions">
+          <button class="btn btn-primary" id="resumeBtn" type="button"><svg><use href="#ico-play"></use></svg><span>Resume</span></button>
+          <button class="btn btn-ghost" id="restartBtn" type="button"><svg><use href="#ico-restart"></use></svg><span>Restart level</span></button>
+        </div>
+        <button class="text-btn" id="quitBtn" type="button"><svg><use href="#ico-home"></use></svg> Quit to title</button>
+        <p class="motion-note" id="motionNote">Motion access is requested only when you turn tilt on.</p>
+      </div>
+    </section>
+
+    <!-- Level clear -->
+    <section class="screen sheet-screen" id="clearScreen" aria-labelledby="clearTitle">
+      <div class="panel clear-panel">
+        <p class="kicker">Gate reached</p>
+        <h2 id="clearTitle">Garden Gate</h2>
+        <div class="stars" id="clearStars" aria-label="Rating"></div>
+        <div class="clear-stats">
+          <div><span id="clearTime">0:00</span><small>time</small></div>
+          <div><span id="clearFreed">1/1</span><small>friends</small></div>
+          <div><span id="clearSpots">0</span><small>spotted</small></div>
+        </div>
+        <p class="clear-line" id="clearLine">Everyone is out. The gate clicks shut behind you.</p>
+        <button class="btn btn-primary" id="nextBtn" type="button"><span>Next court</span><svg><use href="#ico-play"></use></svg></button>
+        <button class="text-btn" id="clearQuitBtn" type="button"><svg><use href="#ico-home"></use></svg> Back to title</button>
+      </div>
+    </section>
+
+    <!-- Victory -->
+    <section class="screen sheet-screen" id="winScreen" aria-labelledby="winTitle">
+      <div class="panel win-panel">
+        <div class="win-moon" aria-hidden="true"><i></i><b></b></div>
+        <p class="kicker">All friends home</p>
+        <h2 id="winTitle">The garden can keep its secrets.</h2>
+        <p class="win-line">Four gates. Nine friends. One very quiet night.</p>
+        <div class="win-stats">
+          <div><span id="winTime">0:00</span><small>total time</small></div>
+          <div><span id="winSpots">0</span><small>times spotted</small></div>
+          <div><span id="winBest">—</span><small>best run</small></div>
+        </div>
+        <button class="btn btn-primary" id="againBtn" type="button"><svg><use href="#ico-restart"></use></svg><span>Run it again</span></button>
+        <button class="text-btn" id="winQuitBtn" type="button"><svg><use href="#ico-home"></use></svg> Back to title</button>
+        <p class="win-credit">Thanks for playing this tiny moonlight rescue.</p>
+      </div>
+    </section>
+
+    <noscript>
+      <div class="noscript">Moonlight Rescue needs JavaScript to run. Please enable it and reload.</div>
+    </noscript>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

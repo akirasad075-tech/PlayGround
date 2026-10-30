@@ -1,0 +1,31 @@
+{
+  "name": "Didnapper 2 — Moonlight Rescue",
+  "short_name": "Moonlight Rescue",
+  "description": "A tiny touch-first stealth rescue game. Free your friends, dodge the lantern light, and slip back to the gate.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050d18",
+  "theme_color": "#07111f",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
