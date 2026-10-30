@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070b12">
+  <meta name="description" content="Saphira: Bound &amp; Blade — a short top-down turn-based RPG of capture, escape, and revenge.">
+  <title>Saphira: Bound &amp; Blade</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1420'/%3E%3Cpath d='M16 5l3 8 8 3-8 3-3 8-3-8-8-3 8-3z' fill='%23f1c777'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" width="640" height="360" aria-label="Saphira adventure game"></canvas>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="vignette" aria-hidden="true"></div>
+
+    <!-- ================= HUD ================= -->
+    <header id="hud" class="hidden">
+      <div class="plate">
+        <canvas id="hud-portrait" width="96" height="96" aria-hidden="true"></canvas>
+        <div class="plate-main">
+          <div class="name-row">
+            <span id="hud-name">Saphira</span>
+            <span id="hud-level" class="level">Lv. 1</span>
+          </div>
+          <div class="bar hp"><div id="hp-fill"></div><span id="hp-text">72 / 72</span></div>
+          <div class="bar mp"><div id="mp-fill"></div><span id="mp-text">18 / 18</span></div>
+          <div class="bar stamina hidden" id="stamina-row"><div id="stamina-fill"></div><span id="stamina-text">Stamina 100</span></div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div class="chips">
+          <span id="status-chip" class="chip status hidden">Captured</span>
+          <span id="agi-chip" class="chip agi">AGI 10</span>
+          <span class="chip gold"><span class="gold-dot">◆</span> <b id="gold-text">0</b></span>
+        </div>
+        <div class="utility">
+          <button id="btn-sound" class="util-btn" aria-label="Toggle sound" title="Sound">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+          </button>
+          <button id="btn-tilt" class="util-btn tilt-btn" aria-label="Toggle tilt controls" title="Tilt controls">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 3v14h10V5H7zm4 15h2v1h-2z"/></svg>
+            <span class="tilt-label">Tilt</span>
+          </button>
+          <button id="btn-help" class="util-btn" aria-label="How to play" title="How to play">?</button>
+        </div>
+      </div>
+      <div id="objective" class="objective">
+        <span class="obj-gem"></span>
+        <span id="objective-text">Explore the Bandit Forest.</span>
+      </div>
+      <div id="stealth-meter" class="stealth-meter hidden">
+        <span id="stealth-label">Unseen</span>
+        <div class="stealth-track"><div id="stealth-fill"></div></div>
+      </div>
+    </header>
+
+    <div id="map-title" class="map-title hidden" aria-live="polite">
+      <div id="map-eyebrow">CHAPTER I</div>
+      <h2 id="map-name">Bandit Forest</h2>
+      <div class="map-rule"><span></span><i></i><span></span></div>
+      <p id="map-sub">Where the red fox banners fly</p>
+    </div>
+
+    <div id="context-hint" class="context-hint hidden">
+      <span class="hint-key">✦</span><span id="context-text">Read the sign</span>
+    </div>
+
+    <!-- ================= TOUCH CONTROLS ================= -->
+    <div id="controls" class="hidden">
+      <div id="joystick" class="joystick" aria-label="Movement joystick">
+        <div class="stick-ring"></div>
+        <div id="stick" class="stick"></div>
+      </div>
+      <div class="action-cluster">
+        <button id="btn-b" class="action-btn minor" aria-label="Interact">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2a2 2 0 0 1 2 2v6h1V5a2 2 0 0 1 4 0v5h1V6a2 2 0 0 1 4 0v8a7 7 0 0 1-7 7h-1a7 7 0 0 1-6.2-3.8L4.5 13a2 2 0 0 1 3.4-2.1L9 12.5V4a2 2 0 0 1 2-2z"/></svg>
+          <span class="btn-label">Interact</span>
+        </button>
+        <button id="btn-a" class="action-btn primary" aria-label="Main action">
+          <svg id="btn-a-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.9 3.2 3.2 6.9l8.5 8.5 1.8-1.8-3.3-3.3 7.5-7.5L19 4.2 21.8 1.4l.8.8-2.8 2.8 1.4 1.4-7.5 7.5 1.8 1.8 2.5-2.5 2.1 2.1-1.4 1.4 1.4 1.4-2.5 2.5-1.4-1.4-1.4 1.4-2.5-2.5 4.2-4.2-8.5-8.5z"/></svg>
+          <span id="btn-a-label" class="btn-label">Blade</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= DIALOGUE ================= -->
+    <div id="dialogue" class="dialogue hidden" role="dialog" aria-live="polite">
+      <div class="portrait-frame">
+        <canvas id="dialogue-portrait" width="96" height="96" aria-hidden="true"></canvas>
+      </div>
+      <div class="dialogue-body">
+        <div id="dialogue-speaker" class="speaker">Saphira</div>
+        <p id="dialogue-text"></p>
+        <div class="dialogue-advance"><span id="dialogue-tap">Tap to continue</span> <i>▸</i></div>
+      </div>
+    </div>
+
+    <!-- ================= BATTLE ================= -->
+    <section id="battle-ui" class="hidden" aria-label="Battle">
+      <div id="enemy-strip" class="enemy-strip"></div>
+      <div id="battle-meta" class="battle-meta">
+        <span id="battle-round">ROUND 1</span>
+        <span id="battle-turn">Your move</span>
+      </div>
+      <div id="battle-log" class="battle-log" aria-live="polite"></div>
+      <div class="battle-dock">
+        <div class="battle-vitals">
+          <div class="vital-name"><span>Saphira</span><span id="battle-hp-text">72 / 72</span></div>
+          <div class="bar hp"><div id="battle-hp-fill"></div></div>
+          <div class="bar mp"><div id="battle-mp-fill"></div><span id="battle-mp-text">18 MP</span></div>
+          <div class="battle-potions">Potions <b id="battle-potions">2</b></div>
+        </div>
+        <div id="battle-commands" class="battle-commands">
+          <button class="battle-btn attack" data-act="attack"><span class="battle-icon">⚔</span><span>Attack</span></button>
+          <button class="battle-btn" data-act="bash"><span class="battle-icon">✹</span><span>Shield Bash <em>5 MP</em></span></button>
+          <button class="battle-btn" data-act="heal"><span class="battle-icon">✚</span><span>Mend <em>7 MP</em></span></button>
+          <button class="battle-btn" data-act="guard"><span class="battle-icon">◈</span><span>Guard</span></button>
+          <button class="battle-btn" data-act="potion"><span class="battle-icon">⚗</span><span>Potion <em id="potion-btn-count">2</em></span></button>
+          <button class="battle-btn flee" data-act="flee"><span class="battle-icon">➤</span><span>Flee</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODAL ================= -->
+    <div id="modal-layer" class="modal-layer hidden">
+      <div id="modal-card" class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div id="modal-eyebrow" class="modal-eyebrow">PLAN YOUR ESCAPE</div>
+        <h3 id="modal-title">Bound and watched</h3>
+        <div id="modal-body" class="modal-body"></div>
+        <div id="modal-options" class="modal-options"></div>
+        <button id="modal-close" class="btn-ghost hidden">Close</button>
+      </div>
+    </div>
+
+    <!-- ================= TITLE ================= -->
+    <section id="title-screen" class="title-screen">
+      <div class="title-top">
+        <div class="title-mark">✦</div>
+        <div class="title-kicker">A TALE OF THE BANDIT FOREST</div>
+        <h1 class="title-logo">Saphira</h1>
+        <div class="title-sub"><span></span>BOUND &amp; BLADE<span></span></div>
+        <p class="title-blurb">A captured knight. A stolen relic. One chance to slip the ropes.</p>
+      </div>
+      <div class="title-actions">
+        <button id="btn-start" class="btn-primary">Begin the Journey</button>
+        <button id="btn-title-help" class="btn-quiet">How to Play</button>
+      </div>
+      <div class="title-foot">
+        <span>Touch · Keyboard · Optional Tilt</span>
+        <span class="foot-dot">◆</span>
+        <span>Fantasy peril, no explicit content</span>
+      </div>
+    </section>
+
+    <!-- ================= ENDING ================= -->
+    <section id="ending-screen" class="ending-screen hidden">
+      <div class="ending-inner">
+        <div class="title-kicker">THE DAWNSTONE RESTORED</div>
+        <h2 class="ending-title">The Knight Unbound</h2>
+        <div class="ending-rule"><span></span><i>✦</i><span></span></div>
+        <p class="ending-copy">
+          Chief Rusk's banner lies in the mud. The Dawnstone returns to Aldermere,
+          and the forest keeps one fewer shadow.
+        </p>
+        <p class="ending-quote">“A blade can win a battle. It takes a clear heart to end one.”</p>
+        <div id="ending-stats" class="ending-stats"></div>
+        <button id="btn-again" class="btn-primary">Play Again</button>
+        <div class="ending-foot">Thank you for playing Saphira: Bound &amp; Blade</div>
+      </div>
+    </section>
+
+    <!-- ================= PORTRAIT ORIENTATION NOTE ================= -->
+    <div id="rotate-hint" class="rotate-hint">
+      <div class="rotate-icon" aria-hidden="true">↻</div>
+      <h2>Turn your device</h2>
+      <p>A wider view makes the forest, the cells, and the duels easier to read.</p>
+      <button id="btn-rotate-continue" class="btn-quiet">Play anyway</button>
+    </div>
+
+    <!-- ================= OVERLAYS ================= -->
+    <div id="big-banner" class="big-banner hidden"><span id="big-banner-text">CAPTURED</span></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="fade" class="fade"></div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
