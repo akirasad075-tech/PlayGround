@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#090713" />
+  <meta name="description" content="Didnapper II — a moonlit royal heist. Slip through the shadows, lasso three princesses, and escape the floating keep. Built for touch, with optional tilt controls." />
+  <title>Didnapper II — A Moonlit Royal Heist</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0818'/%3E%3Cpath d='M14 44 32 12l18 32-18-7z' fill='%23ffd166'/%3E%3Ccircle cx='32' cy='34' r='3' fill='%23f7a8c4'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <canvas id="game" aria-label="Didnapper II stealth platformer. Use the on-screen controls or a keyboard to play."></canvas>
+
+    <div id="worldHud" class="hidden" aria-live="polite">
+      <div id="hudTop">
+        <div id="hearts" aria-label="Three hearts of resolve">
+          <span class="heart" data-heart="0"></span>
+          <span class="heart" data-heart="1"></span>
+          <span class="heart" data-heart="2"></span>
+        </div>
+        <div id="objective">
+          <svg class="crown-mini" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l-1.6-9-4.7 3.4L12 5l-2.7 7.4L4.6 9z"/></svg>
+          <span id="objectiveText">Capture 3 princesses</span>
+          <span id="crowns" class="crowns" aria-hidden="true">
+            <i class="crown"></i><i class="crown"></i><i class="crown"></i>
+          </span>
+        </div>
+        <div id="hudRight">
+          <span id="timer">00:00</span>
+          <button id="muteBtn" class="icon-btn" type="button" aria-label="Mute sound" aria-pressed="false" title="Mute (M)">
+            <svg class="ico-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+            <svg class="ico-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="m16 9 5 6m0-6-5 6"/></svg>
+          </button>
+          <button id="pauseBtn" class="icon-btn" type="button" aria-label="Pause game" title="Pause (Esc)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="floorTag"><span class="floor-dot"></span><span id="floorText">1F · Grand Atrium</span></div>
+      <div id="alertBanner" class="hidden"><span class="alert-eye"></span><span>Spotted!</span></div>
+    </div>
+
+    <div id="prompt" class="hidden"><span id="promptKey">E</span><span id="promptText">Lasso</span></div>
+    <div id="toasts" aria-live="polite"></div>
+
+    <div id="touchControls" class="hidden" aria-hidden="true">
+      <div id="joystick" class="joystick">
+        <div class="stick-ring"></div>
+        <div id="stickKnob" class="stick-knob"></div>
+        <span class="stick-hint">MOVE</span>
+      </div>
+      <button id="lassoBtn" class="action-btn lasso" type="button" aria-label="Lasso">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 33c8-18 20-22 27-17 5 4 3 11-2 12-6 2-10-4-5-9 4-4 11-1 12 6"/><circle cx="9" cy="35" r="4"/></svg>
+        <span>Lasso</span>
+      </button>
+      <button id="jumpBtn" class="action-btn jump" type="button" aria-label="Jump">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 39V13m0 0-9 9m9-9 9 9"/><path d="M12 42h24" opacity=".55"/></svg>
+        <span>Jump</span>
+      </button>
+    </div>
+
+    <div id="tiltBadge" class="hidden"><span class="tilt-glyph"></span><span id="tiltValue">Tilt</span></div>
+
+    <section id="menu" class="screen">
+      <div class="menu-scrim"></div>
+      <div class="menu-inner">
+        <div class="menu-copy">
+          <div class="eyebrow"><span></span>A moonlit royal heist<span></span></div>
+          <h1 class="logo">
+            <span class="logo-did">DIDNAPPER</span>
+            <span class="logo-ii">II</span>
+          </h1>
+          <p class="tagline">Slip through the shadows. Lasso three princesses.<br class="wide-only" /> Never be seen.</p>
+
+          <div class="menu-actions">
+            <button id="startBtn" class="btn btn-primary" type="button" aria-label="Start game">
+              <span>Start Game</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>
+            </button>
+            <button id="helpBtn" class="btn btn-ghost" type="button" aria-label="How to play">How to Play</button>
+          </div>
+
+          <div class="menu-options">
+            <button id="tiltToggle" class="pill-toggle" type="button" aria-pressed="false">
+              <span class="pill-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><path d="M3 7c1.2 1.5 1.2 8.5 0 10M21 7c-1.2 1.5-1.2 8.5 0 10"/></svg>
+              </span>
+              <span class="pill-label">Tilt controls</span>
+              <span id="tiltState" class="pill-state">Off</span>
+            </button>
+            <button id="menuMute" class="pill-toggle" type="button" aria-pressed="false">
+              <span class="pill-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+              </span>
+              <span class="pill-label">Sound</span>
+              <span id="soundState" class="pill-state">On</span>
+            </button>
+          </div>
+
+          <div id="helpPanel" class="help-panel hidden" role="region" aria-label="Controls">
+            <div class="help-row"><span class="keycap">◀ ▶</span><span>Move with the joystick, arrow keys, or optional tilt.</span></div>
+            <div class="help-row"><span class="keycap">Jump</span><span>Jump and double-jump. Press the round Jump button.</span></div>
+            <div class="help-row"><span class="keycap">Lasso</span><span>Tap near a guard to stun. Hold near a ring to grapple.</span></div>
+            <div class="help-row"><span class="keycap">Crown</span><span>Get close to a princess and lasso her. Capture all three.</span></div>
+            <div class="help-row"><span class="keycap">Ladder</span><span>Push up or down while standing in a rope ladder.</span></div>
+            <div class="help-row"><span class="keycap">Esc</span><span>Pause. Keyboard: A/D move, Space jump, E lasso.</span></div>
+          </div>
+
+          <div class="menu-foot">
+            <span>Best played with sound</span>
+            <span class="dot">·</span>
+            <span>Touch, tilt &amp; keyboard</span>
+          </div>
+        </div>
+
+        <div class="menu-side" aria-hidden="true">
+          <div class="constellation">
+            <span class="star s1"></span><span class="star s2"></span><span class="star s3"></span>
+            <span class="star s4"></span><span class="star s5"></span><span class="star s6"></span>
+          </div>
+          <div class="quote">
+            <span class="quote-mark">“</span>
+            <p>Three crowns. One rope.<br />A castle full of eyes.</p>
+          </div>
+        </div>
+      </div>
+      <div class="version">A handcrafted browser caper · v1.0</div>
+    </section>
+
+    <section id="pauseScreen" class="screen modal hidden" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <div class="modal-card">
+        <div class="modal-eyebrow">The caper is paused</div>
+        <h2 id="pauseTitle">Catch your breath</h2>
+        <div class="pause-stats">
+          <div><span id="pauseCrowns">0</span><small>crowns</small></div>
+          <div><span id="pauseTime">00:00</span><small>elapsed</small></div>
+          <div><span id="pauseFloor">1F</span><small>floor</small></div>
+        </div>
+        <div class="settings-row">
+          <span>Tilt controls</span>
+          <button id="pauseTiltToggle" class="mini-toggle" type="button" aria-pressed="false"><span>Off</span></button>
+        </div>
+        <label class="settings-row slider-row">
+          <span>Tilt sensitivity</span>
+          <input id="tiltSensitivity" type="range" min="0.4" max="2" step="0.1" value="1" aria-label="Tilt sensitivity" />
+        </label>
+        <div class="settings-row">
+          <span>Sound</span>
+          <button id="pauseMute" class="mini-toggle" type="button" aria-pressed="false"><span>On</span></button>
+        </div>
+        <div class="modal-actions">
+          <button id="resumeBtn" class="btn btn-primary" type="button">Resume</button>
+          <button id="restartBtn" class="btn btn-ghost" type="button">Restart Run</button>
+          <button id="quitBtn" class="btn btn-quiet" type="button">Leave Keep</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameOverScreen" class="screen modal hidden" role="dialog" aria-modal="true" aria-labelledby="overTitle">
+      <div class="modal-card danger">
+        <div class="modal-eyebrow">The alarm bells win</div>
+        <h2 id="overTitle">Caught in the light</h2>
+        <p class="modal-copy">The castle guards have your scent. Regroup at the last lantern and try the shadows again.</p>
+        <div class="modal-actions">
+          <button id="retryBtn" class="btn btn-primary" type="button">Try Again</button>
+          <button id="overQuitBtn" class="btn btn-quiet" type="button">Leave Keep</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="victoryScreen" class="screen modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+      <div class="modal-card victory-card">
+        <div class="modal-eyebrow">The moon gate opens</div>
+        <h2 id="winTitle">Three crowns, one clean escape</h2>
+        <p class="modal-copy">The floating keep wakes to an empty throne room. Somewhere below, three princesses are already planning their next adventure.</p>
+        <div class="result-grid">
+          <div><span id="resultTime">00:00</span><small>heist time</small></div>
+          <div><span id="resultCrowns">3 / 3</span><small>crowns</small></div>
+          <div><span id="resultRank">S</span><small>rank</small></div>
+        </div>
+        <div class="modal-actions">
+          <button id="againBtn" class="btn btn-primary" type="button">Play Again</button>
+          <button id="victoryQuitBtn" class="btn btn-quiet" type="button">Leave Keep</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="rotateHint" class="hidden" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><rect x="14" y="7" width="20" height="34" rx="4"/><path d="M21 37h6"/><path d="M5 24a19 19 0 0 1 4-11M43 24a19 19 0 0 0-4-11"/></svg>
+      <span>Rotate for a wider view</span>
+    </div>
+
+    <div id="bootError" class="hidden">The drawbridge failed to lower. Please reload.</div>
+  </main>
+
+  <noscript>This caper needs JavaScript enabled.</noscript>
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
